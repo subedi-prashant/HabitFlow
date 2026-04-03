@@ -67,7 +67,7 @@ export function HabitCard({ habit, todayLog, streak, onEdit, onDelete }: HabitCa
       >
         <Card
           className={cn(
-            "group relative overflow-hidden transition-all hover:shadow-md",
+            "group relative overflow-visible transition-all hover:shadow-md",
             isCompleted && "ring-2 ring-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20"
           )}
         >
