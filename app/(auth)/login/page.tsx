@@ -21,6 +21,7 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
+  const signupsEnabled = process.env.NEXT_PUBLIC_SIGNUPS_ENABLED === "true";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,6 +51,11 @@ function LoginForm() {
   };
 
   const handleGoogleLogin = async () => {
+    if (!signupsEnabled) {
+      toast.error("Google login is disabled while signups are closed.");
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -115,6 +121,7 @@ function LoginForm() {
               type="button"
               variant="outline"
               className="w-full"
+              disabled={!signupsEnabled}
               onClick={handleGoogleLogin}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -137,11 +144,22 @@ function LoginForm() {
               </svg>
               Continue with Google
             </Button>
+            {!signupsEnabled && (
+              <p className="text-sm text-center text-muted-foreground">
+                New signups are temporarily closed.
+              </p>
+            )}
             <p className="text-sm text-center text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-primary hover:underline font-medium">
-                Sign up
-              </Link>
+              {signupsEnabled ? (
+                <>
+                  Don&apos;t have an account?{" "}
+                  <Link href="/signup" className="text-primary hover:underline font-medium">
+                    Sign up
+                  </Link>
+                </>
+              ) : (
+                "Invite-only access is enabled right now."
+              )}
             </p>
           </CardFooter>
         </form>
