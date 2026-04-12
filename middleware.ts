@@ -2,6 +2,8 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const signupsEnabled = process.env.NEXT_PUBLIC_SIGNUPS_ENABLED === "true";
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -59,6 +61,10 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = authPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
+
+  if (!signupsEnabled && request.nextUrl.pathname.startsWith("/signup")) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
 
   if (isAuthRoute && session) {
     return NextResponse.redirect(new URL("/dashboard", request.url));

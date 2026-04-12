@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "sonner";
 
 export default function SignUpPage() {
+  const signupsEnabled = process.env.NEXT_PUBLIC_SIGNUPS_ENABLED === "true";
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,6 +22,12 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!signupsEnabled) {
+      toast.error("Signups are currently closed.");
+      return;
+    }
+
     setLoading(true);
 
     const emailRedirectTo = `${window.location.origin}/auth/callback?next=/dashboard`;
@@ -45,6 +52,11 @@ export default function SignUpPage() {
   };
 
   const handleGoogleSignUp = async () => {
+    if (!signupsEnabled) {
+      toast.error("Signups are currently closed.");
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -64,7 +76,11 @@ export default function SignUpPage() {
           </span>
         </div>
         <CardTitle className="text-2xl">Create your account</CardTitle>
-        <CardDescription>Start building better habits today</CardDescription>
+        <CardDescription>
+          {signupsEnabled
+            ? "Start building better habits today"
+            : "Signups are temporarily closed"}
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSignUp}>
         <CardContent className="space-y-4">
@@ -104,7 +120,7 @@ export default function SignUpPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || !signupsEnabled}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Account
           </Button>
@@ -120,6 +136,7 @@ export default function SignUpPage() {
             type="button"
             variant="outline"
             className="w-full"
+            disabled={!signupsEnabled}
             onClick={handleGoogleSignUp}
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -130,6 +147,11 @@ export default function SignUpPage() {
             </svg>
             Continue with Google
           </Button>
+          {!signupsEnabled && (
+            <p className="text-sm text-center text-muted-foreground">
+              Please contact the admin to get access.
+            </p>
+          )}
           <p className="text-sm text-center text-muted-foreground">
             Already have an account?{" "}
             <Link href="/login" className="text-primary hover:underline font-medium">
