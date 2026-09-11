@@ -54,6 +54,126 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.12), transparent 34%),
+      radial-gradient(circle at top right, hsl(160 84% 39% / 0.08), transparent 28%),
+      linear-gradient(to bottom, hsl(var(--background)), hsl(var(--background)));
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground));
+  }
+}
+
+.habitflow-app,
+.habitflow-auth,
+.habitflow-surface {
+  --background: 49 31% 94%;
+  --foreground: 76 16% 10%;
+  --card: 48 33% 98%;
+  --card-foreground: 76 16% 10%;
+  --popover: 48 33% 98%;
+  --popover-foreground: 76 16% 10%;
+  --primary: 76 78% 57%;
+  --primary-foreground: 76 16% 10%;
+  --secondary: 48 18% 88%;
+  --secondary-foreground: 76 14% 17%;
+  --muted: 48 18% 88%;
+  --muted-foreground: 65 7% 41%;
+  --accent: 76 78% 57%;
+  --accent-foreground: 76 16% 10%;
+  --destructive: 4 70% 52%;
+  --destructive-foreground: 48 33% 98%;
+  --border: 62 10% 78%;
+  --input: 62 10% 76%;
+  --ring: 76 78% 45%;
+  --radius: 0.9rem;
+}
+
+.dark .habitflow-app,
+.dark .habitflow-auth,
+.dark .habitflow-surface {
+  --background: 76 15% 8%;
+  --foreground: 49 31% 94%;
+  --card: 74 12% 11%;
+  --card-foreground: 49 31% 94%;
+  --popover: 74 12% 11%;
+  --popover-foreground: 49 31% 94%;
+  --primary: 76 78% 57%;
+  --primary-foreground: 76 16% 10%;
+  --secondary: 73 10% 17%;
+  --secondary-foreground: 49 31% 94%;
+  --muted: 73 10% 17%;
+  --muted-foreground: 55 8% 65%;
+  --accent: 76 78% 57%;
+  --accent-foreground: 76 16% 10%;
+  --destructive: 4 62% 46%;
+  --destructive-foreground: 49 31% 94%;
+  --border: 70 8% 23%;
+  --input: 70 8% 25%;
+  --ring: 76 78% 57%;
+}
+
+.habitflow-app {
+  background-color: hsl(var(--background));
+  background-image:
+    linear-gradient(hsl(var(--border) / 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border) / 0.18) 1px, transparent 1px);
+  background-position: -1px -1px;
+  background-size: 48px 48px;
+}
+
+.habitflow-app .editorial-card {
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) + 0.2rem);
+  background: hsl(var(--card));
+  box-shadow: 0 1px 0 hsl(var(--foreground) / 0.05);
+}
+
+.habitflow-app .editorial-kicker,
+.habitflow-auth .editorial-kicker {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1rem;
+  text-transform: uppercase;
+}
+
+.habitflow-app .editorial-title,
+.habitflow-auth .editorial-title {
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.habitflow-app .metric-number {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.055em;
+}
+
+.habitflow-app .scrollbar-none {
+  scrollbar-width: none;
+}
+
+.habitflow-app .scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.habitflow-auth input:-webkit-autofill,
+.habitflow-auth input:-webkit-autofill:hover,
+.habitflow-auth input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset;
+  -webkit-text-fill-color: hsl(var(--foreground));
+  caret-color: hsl(var(--foreground));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #fluid {
+    display: none;
   }
 }

@@ -2,44 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Target,
-  BarChart3,
-  ListChecks,
-  Settings,
-} from "lucide-react";
+import { MOBILE_NAVIGATION } from "@/components/layout/navigation";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/habits", label: "Habits", icon: Target },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/routines", label: "Routines", icon: ListChecks },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
 
 export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-      <div className="flex items-center justify-around py-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
+    <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-foreground/15 bg-foreground p-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/25 lg:hidden">
+      <div className="grid grid-cols-5 gap-1">
+        {MOBILE_NAVIGATION.map((item) => {
+          const isActive = pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-colors",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                "relative flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px] font-semibold transition-colors",
+                isActive ? "bg-primary text-primary-foreground" : "text-background/60 hover:bg-background/10 hover:text-background"
               )}
             >
-              <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
+              <item.icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.6 : 2} />
+              <span className="truncate">{item.shortLabel}</span>
             </Link>
           );
         })}
