@@ -70,9 +70,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Keep the Wallet homepage public.
+  // Redirect root to dashboard if authenticated, login if not
   if (request.nextUrl.pathname === "/") {
-    return response;
+    if (session) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return response;

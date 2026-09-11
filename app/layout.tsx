@@ -8,8 +8,8 @@ import { Toaster } from "@/components/ui/sonner";
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Wallet - Daily Expense Tracker",
-  description: "Track daily expenses and income in Bikram Samvat with Wallet.",
+  title: "HabitFlow — Performance, every day",
+  description: "Build consistent habits, log training, and understand your momentum.",
 };
 
 export default function RootLayout({
