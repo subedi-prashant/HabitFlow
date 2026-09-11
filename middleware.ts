@@ -45,7 +45,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getSession();
 
   // Protected routes - redirect to login if not authenticated
-  const protectedPaths = ["/dashboard", "/habits", "/analytics", "/routines", "/settings"];
+  const protectedPaths = ["/dashboard", "/habits", "/training", "/analytics", "/routines", "/settings"];
   const isProtectedRoute = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
@@ -57,7 +57,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect authenticated users away from auth pages
-  const authPaths = ["/login", "/signup"];
+  const authPaths = ["/login", "/signup", "/forgot-password"];
   const isAuthRoute = authPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
@@ -70,12 +70,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Redirect root to dashboard if authenticated, login if not
+  // Keep the Wallet homepage public.
   if (request.nextUrl.pathname === "/") {
-    if (session) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-    return NextResponse.redirect(new URL("/login", request.url));
+    return response;
   }
 
   return response;

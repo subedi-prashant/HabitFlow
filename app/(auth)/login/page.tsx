@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { Flame, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, Loader2, LockKeyhole } from "lucide-react";
+import { GoogleIcon } from "@/components/auth/google-icon";
+import { PasswordInput } from "@/components/auth/password-input";
+import { AppLogo } from "@/components/layout/app-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import SplashCursor from "@/components/ui/splash-cursor";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -27,17 +28,17 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+  const requestedRedirect = searchParams.get("redirectTo");
+  const redirectTo = requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//")
+    ? requestedRedirect
+    : "/dashboard";
   const supabase = createClient();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       toast.error(error.message);
@@ -45,125 +46,122 @@ function LoginForm() {
       return;
     }
 
-    toast.success("Welcome back!");
+    toast.success("Welcome back");
     router.push(redirectTo);
     router.refresh();
   };
 
   const handleGoogleLogin = async () => {
     if (!signupsEnabled) {
-      toast.error("Google login is disabled while signups are closed.");
+      toast.error("Google access is paused while registration is invite-only.");
       return;
     }
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
       },
     });
-    if (error) toast.error(error.message);
+
+    if (error) {
+      toast.error(error.message);
+    }
   };
 
   return (
-    <div className="relative w-full flex items-center justify-center">
-      <SplashCursor />
-      <Card className="relative z-10 w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Flame className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent">
-              HabitFlow
-            </span>
+    <div className="w-full max-w-[31rem]">
+      <div className="mb-8 lg:hidden">
+        <AppLogo href="/login" />
+      </div>
+
+      <section className="rounded-[1.5rem] border border-border bg-card/95 p-5 shadow-[0_24px_80px_rgba(17,20,13,0.12)] backdrop-blur-xl sm:p-8">
+        <div className="mb-8">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-secondary/65 px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+            <LockKeyhole className="h-3.5 w-3.5 text-primary" />
+            Member access
           </div>
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to continue tracking your habits</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
+          <p className="editorial-kicker mb-3">Continue your momentum</p>
+          <h1 className="editorial-title text-4xl sm:text-5xl">Welcome back.</h1>
+          <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
+            Sign in to see today&apos;s habits, training volume, and activity progress.
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email address</Label>
+            <Input
+              id="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="h-12 rounded-xl bg-background/80 px-4"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <Link href="/forgot-password" className="text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+                Forgot password?
+              </Link>
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
-            </Button>
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">or</span>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              disabled={!signupsEnabled}
-              onClick={handleGoogleLogin}
-            >
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
-              Continue with Google
-            </Button>
-            {!signupsEnabled && (
-              <p className="text-sm text-center text-muted-foreground">
-                New signups are temporarily closed.
-              </p>
-            )}
-            <p className="text-sm text-center text-muted-foreground">
-              {signupsEnabled ? (
-                <>
-                  Don&apos;t have an account?{" "}
-                  <Link href="/signup" className="text-primary hover:underline font-medium">
-                    Sign up
-                  </Link>
-                </>
-              ) : (
-                "Invite-only access is enabled right now."
-              )}
-            </p>
-          </CardFooter>
+            <PasswordInput
+              id="password"
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="h-12 rounded-xl bg-background/80 px-4"
+              required
+            />
+          </div>
+
+          <Button type="submit" className="h-12 w-full justify-between rounded-xl px-4 text-sm font-bold" disabled={loading}>
+            <span className="flex items-center gap-2">
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Sign in
+            </span>
+            {!loading && <ArrowRight className="h-4 w-4" />}
+          </Button>
         </form>
-      </Card>
+
+        <div className="my-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          Or continue with
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 w-full gap-3 rounded-xl bg-background/70"
+          disabled={!signupsEnabled}
+          onClick={handleGoogleLogin}
+        >
+          <GoogleIcon />
+          Google
+        </Button>
+
+        <div className="mt-6 border-t border-border pt-5 text-center text-sm text-muted-foreground">
+          {signupsEnabled ? (
+            <p>
+              New to HabitFlow?{" "}
+              <Link href="/signup" className="font-bold text-foreground underline decoration-primary decoration-2 underline-offset-4">
+                Create an account
+              </Link>
+            </p>
+          ) : (
+            <p>Registration is invite-only. Existing members can sign in above.</p>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

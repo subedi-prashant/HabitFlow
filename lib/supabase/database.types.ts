@@ -114,6 +114,150 @@ export type Database = {
         };
         Relationships: [];
       };
+      workout_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          performed_on: string;
+          duration_minutes: number | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          performed_on?: string;
+          duration_minutes?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          performed_on?: string;
+          duration_minutes?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      workout_exercises: {
+        Row: {
+          id: string;
+          session_id: string;
+          user_id: string;
+          name: string;
+          muscle_group: "Chest" | "Back" | "Legs" | "Shoulders" | "Arms" | "Core" | "Full Body" | "Other";
+          position: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          user_id: string;
+          name: string;
+          muscle_group?: "Chest" | "Back" | "Legs" | "Shoulders" | "Arms" | "Core" | "Full Body" | "Other";
+          position?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          user_id?: string;
+          name?: string;
+          muscle_group?: "Chest" | "Back" | "Legs" | "Shoulders" | "Arms" | "Core" | "Full Body" | "Other";
+          position?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      workout_sets: {
+        Row: {
+          id: string;
+          exercise_id: string;
+          user_id: string;
+          set_number: number;
+          reps: number;
+          weight_kg: number;
+          rpe: number | null;
+          is_warmup: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          exercise_id: string;
+          user_id: string;
+          set_number: number;
+          reps: number;
+          weight_kg?: number;
+          rpe?: number | null;
+          is_warmup?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          exercise_id?: string;
+          user_id?: string;
+          set_number?: number;
+          reps?: number;
+          weight_kg?: number;
+          rpe?: number | null;
+          is_warmup?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      activity_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          activity_type: "Walking" | "Running" | "Cycling" | "Swimming" | "Hiking" | "Sport" | "Yoga" | "Mobility" | "Other";
+          name: string;
+          performed_on: string;
+          duration_minutes: number;
+          distance_km: number | null;
+          calories: number | null;
+          intensity: "Low" | "Moderate" | "High";
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          activity_type: "Walking" | "Running" | "Cycling" | "Swimming" | "Hiking" | "Sport" | "Yoga" | "Mobility" | "Other";
+          name: string;
+          performed_on?: string;
+          duration_minutes: number;
+          distance_km?: number | null;
+          calories?: number | null;
+          intensity?: "Low" | "Moderate" | "High";
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          activity_type?: "Walking" | "Running" | "Cycling" | "Swimming" | "Hiking" | "Sport" | "Yoga" | "Mobility" | "Other";
+          name?: string;
+          performed_on?: string;
+          duration_minutes?: number;
+          distance_km?: number | null;
+          calories?: number | null;
+          intensity?: "Low" | "Moderate" | "High";
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       routines: {
         Row: {
           id: string;
