@@ -9,7 +9,7 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "HabitFlow — Performance, every day",
-  description: "Build consistent habits, log training, and understand your momentum.",
+  description: "Build consistent habits, log training, and account for daily expenses.",
 };
 
 export default function RootLayout({

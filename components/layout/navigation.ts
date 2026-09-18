@@ -5,6 +5,7 @@ import {
   ListChecks,
   Settings,
   Target,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -20,6 +21,7 @@ export const PRIMARY_NAVIGATION: NavigationItem[] = [
   { href: "/habits", label: "Habits", shortLabel: "Habits", icon: Target },
   { href: "/training", label: "Training", shortLabel: "Train", icon: Dumbbell },
   { href: "/analytics", label: "Insights", shortLabel: "Insights", icon: BarChart3 },
+  { href: "/kharcha", label: "Kharcha", shortLabel: "Kharcha", icon: Wallet },
 ];
 
 export const SECONDARY_NAVIGATION: NavigationItem[] = [
@@ -27,7 +29,4 @@ export const SECONDARY_NAVIGATION: NavigationItem[] = [
   { href: "/settings", label: "Settings", shortLabel: "Settings", icon: Settings },
 ];
 
-export const MOBILE_NAVIGATION = [
-  ...PRIMARY_NAVIGATION,
-  SECONDARY_NAVIGATION[1],
-];
+export const MOBILE_NAVIGATION = PRIMARY_NAVIGATION;

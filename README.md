@@ -1,6 +1,6 @@
 # HabitFlow
 
-**A personal performance system** for building habits, running routines, logging workouts, tracking analytics, and managing daily finances — all in one place.
+**A personal performance system** for building habits, running routines, logging workouts, tracking analytics, and accounting for daily expenses — all in one place.
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
@@ -20,7 +20,7 @@ HabitFlow is a Next.js (App Router) application backed by Supabase. It combines 
 - **Routines** — group habits into morning, evening, fitness, or custom routines you can step through each day.
 - **Training** — log strength workouts (exercises, sets, reps, weight, RPE) and cardio/activity sessions (type, duration, distance, calories, intensity).
 - **Analytics** — 30-day view of completion rates, streaks, and workout volume, visualized with charts.
-- **Wallet** — track income/expenses by category and payment method on the Bikram Sambat calendar.
+- **Kharcha** — automatically import NIMB and eSewa debit alerts from Gmail, add missed or cash expenses manually, and review spending in AD and Bikram Samvat.
 - **Accounts** — Supabase email/password and Google auth, password reset flow, and an env-gated signup toggle.
 - **Polish** — light/dark/system theming, responsive sidebar + mobile bottom navigation, drag-and-drop, and animated UI.
 
@@ -41,12 +41,13 @@ HabitFlow is a Next.js (App Router) application backed by Supabase. It combines 
 ```
 app/
   (auth)/          Login, signup, forgot/reset password
-  (protected)/      Dashboard, habits, routines, training, analytics, settings
-  auth/callback/    Supabase auth callback route
-  page.tsx          Wallet (expense tracker) landing page
-components/         UI primitives + feature components (habits, routines, training, layout, auth)
-hooks/               React Query hooks (habits, logs, streaks, routines, training, profile)
-lib/                 Supabase clients, wallet/training helpers, shared utils
+  (protected)/     Dashboard, habits, routines, training, analytics, Kharcha, settings
+  api/kharcha/     Signed Gmail ingestion route
+  auth/callback/   Supabase auth callback route
+components/        UI primitives + feature components
+hooks/             React Query hooks
+integrations/      Google Apps Script Gmail collector
+lib/               Supabase clients, parsers, domain helpers, shared utils
 supabase/migrations/ SQL schema migrations
 ```
 
@@ -54,7 +55,7 @@ supabase/migrations/ SQL schema migrations
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - A [Supabase](https://supabase.com/) project
 
 ### Setup
@@ -71,9 +72,12 @@ supabase/migrations/ SQL schema migrations
    NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
    NEXT_PUBLIC_SIGNUPS_ENABLED=true
+   SUPABASE_SECRET_KEY=your-server-only-supabase-secret-key
+   KHARCHA_USER_ID=your-supabase-user-id
+   KHARCHA_INGEST_SECRET=generate-a-random-secret-at-least-32-characters
    ```
 
-3. In your Supabase project's SQL editor, run the migrations in `supabase/migrations/` in order (`001_initial_schema.sql`, `002_wallet_schema.sql`, `003_training_schema.sql`) to create the schema, enums, and row-level security policies.
+3. Run the migrations in `supabase/migrations/` in order through the Supabase CLI, SQL editor, or MCP. `004_kharcha_schema.sql` is self-contained because the legacy Wallet migration was not deployed to every environment.
 
 4. Start the dev server:
 
@@ -83,6 +87,19 @@ supabase/migrations/ SQL schema migrations
 
    The app runs at [http://localhost:3000](http://localhost:3000).
 
+### Kharcha Gmail collector
+
+1. Deploy the app with `SUPABASE_SECRET_KEY`, `KHARCHA_USER_ID`, and `KHARCHA_INGEST_SECRET` configured as server-only environment variables.
+2. Create a standalone Google Apps Script project and copy `integrations/kharcha-gmail/Code.gs` and `appsscript.json` into it.
+3. In Apps Script **Project Settings → Script Properties**, set:
+   - `KHARCHA_API_URL` to the deployed `/api/kharcha/ingest/email` HTTPS endpoint.
+   - `KHARCHA_INGEST_SECRET` to the same secret configured on the server.
+   - Optionally, `KHARCHA_GMAIL_QUERY` to override the built-in NIMB and eSewa sender query.
+4. Run `Setup` once and approve the Gmail, external request, and trigger permissions. `Setup` starts from the current time, sends a connection heartbeat, and installs the one-minute collector.
+5. Run `TestConnection` after deployment changes. Run `Disable` to remove the collector trigger.
+
+NIC ASIA is intentionally excluded until a real alert template is available. Raw email bodies and secret values are not stored in Supabase or logged by the integration.
+
 ### Scripts
 
 | Command | Description |
@@ -91,16 +108,18 @@ supabase/migrations/ SQL schema migrations
 | `npm run build` | Build for production |
 | `npm run start` | Run the production build |
 | `npm run lint` | Run ESLint |
+| `npm test` | Run the deterministic parser and ingestion tests |
 
 ## Database Schema
 
 | Migration | Tables |
 |---|---|
 | `001_initial_schema.sql` | `users_profile`, `habits`, `habit_logs`, `routines`, `streaks` |
-| `002_wallet_schema.sql` | `wallet_entries` |
+| `002_wallet_schema.sql` | Legacy `wallet_entries` schema; no longer used by the app |
 | `003_training_schema.sql` | `workout_sessions`, `workout_exercises`, `workout_sets`, `activity_logs` |
+| `004_kharcha_schema.sql` | `kharcha_transactions`, `kharcha_ingestion_events`, `kharcha_sync_state` |
 
-All tables are scoped per-user with Postgres Row-Level Security policies.
+All user-facing records are scoped per user with Postgres Row-Level Security. The signed ingestion route uses a server-only Supabase secret key after authenticating the collector request.
 
 ## Status
 

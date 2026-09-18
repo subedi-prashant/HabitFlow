@@ -5,7 +5,7 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 
 export const metadata: Metadata = {
   title: "HabitFlow — Performance, every day",
-  description: "Build consistent habits, log training, and understand your momentum.",
+  description: "Build consistent habits, log training, and account for daily expenses.",
 };
 
 export default function ProtectedLayout({

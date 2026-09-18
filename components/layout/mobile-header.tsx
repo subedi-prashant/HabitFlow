@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 export function MobileHeader() {
   const pathname = usePathname();
-  const navigation = [...MOBILE_NAVIGATION, SECONDARY_NAVIGATION[0]];
+  const navigation = [...MOBILE_NAVIGATION, ...SECONDARY_NAVIGATION];
   const currentItem = navigation.find((item) => pathname.startsWith(item.href));
 
   return (
