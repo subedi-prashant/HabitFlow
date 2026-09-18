@@ -114,6 +114,153 @@ export type Database = {
         };
         Relationships: [];
       };
+      kharcha_transactions: {
+        Row: {
+          id: string;
+          user_id: string;
+          amount: number;
+          currency: string;
+          source: "NIMB" | "NIC_ASIA" | "ESEWA" | "MANUAL";
+          channel: "merchant_payment" | "qr_payment" | "bank_transfer" | "wallet_top_up" | "card_payment" | "cash_withdrawal" | "fee" | "cash" | "other";
+          category: "Food & Drink" | "Transport" | "Bills & Utilities" | "Shopping" | "Health" | "Education" | "Entertainment" | "Housing" | "Travel" | "Transfers" | "Cash Withdrawal" | "Fees" | "Other";
+          merchant: string;
+          description: string;
+          external_transaction_id: string | null;
+          gmail_message_id: string | null;
+          occurred_at: string;
+          occurred_on: string;
+          bs_year: number;
+          bs_month: number;
+          bs_day: number;
+          ingestion_method: "email" | "manual";
+          status: "posted" | "reversed" | "excluded";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          amount: number;
+          currency?: string;
+          source: "NIMB" | "NIC_ASIA" | "ESEWA" | "MANUAL";
+          channel: "merchant_payment" | "qr_payment" | "bank_transfer" | "wallet_top_up" | "card_payment" | "cash_withdrawal" | "fee" | "cash" | "other";
+          category?: "Food & Drink" | "Transport" | "Bills & Utilities" | "Shopping" | "Health" | "Education" | "Entertainment" | "Housing" | "Travel" | "Transfers" | "Cash Withdrawal" | "Fees" | "Other";
+          merchant?: string;
+          description?: string;
+          external_transaction_id?: string | null;
+          gmail_message_id?: string | null;
+          occurred_at: string;
+          occurred_on: string;
+          bs_year: number;
+          bs_month: number;
+          bs_day: number;
+          ingestion_method: "email" | "manual";
+          status?: "posted" | "reversed" | "excluded";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          amount?: number;
+          currency?: string;
+          source?: "NIMB" | "NIC_ASIA" | "ESEWA" | "MANUAL";
+          channel?: "merchant_payment" | "qr_payment" | "bank_transfer" | "wallet_top_up" | "card_payment" | "cash_withdrawal" | "fee" | "cash" | "other";
+          category?: "Food & Drink" | "Transport" | "Bills & Utilities" | "Shopping" | "Health" | "Education" | "Entertainment" | "Housing" | "Travel" | "Transfers" | "Cash Withdrawal" | "Fees" | "Other";
+          merchant?: string;
+          description?: string;
+          external_transaction_id?: string | null;
+          gmail_message_id?: string | null;
+          occurred_at?: string;
+          occurred_on?: string;
+          bs_year?: number;
+          bs_month?: number;
+          bs_day?: number;
+          ingestion_method?: "email" | "manual";
+          status?: "posted" | "reversed" | "excluded";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      kharcha_ingestion_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          gmail_message_id: string;
+          sender: string;
+          subject: string;
+          received_at: string;
+          source: "NIMB" | "NIC_ASIA" | "ESEWA" | null;
+          status: "processed" | "duplicate" | "needs_review" | "unsupported" | "failed";
+          reason: string;
+          transaction_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          gmail_message_id: string;
+          sender: string;
+          subject?: string;
+          received_at: string;
+          source?: "NIMB" | "NIC_ASIA" | "ESEWA" | null;
+          status: "processed" | "duplicate" | "needs_review" | "unsupported" | "failed";
+          reason?: string;
+          transaction_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          gmail_message_id?: string;
+          sender?: string;
+          subject?: string;
+          received_at?: string;
+          source?: "NIMB" | "NIC_ASIA" | "ESEWA" | null;
+          status?: "processed" | "duplicate" | "needs_review" | "unsupported" | "failed";
+          reason?: string;
+          transaction_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      kharcha_sync_state: {
+        Row: {
+          user_id: string;
+          last_checked_at: string | null;
+          last_success_at: string | null;
+          last_message_at: string | null;
+          last_error_at: string | null;
+          last_error: string | null;
+          consecutive_failures: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          last_checked_at?: string | null;
+          last_success_at?: string | null;
+          last_message_at?: string | null;
+          last_error_at?: string | null;
+          last_error?: string | null;
+          consecutive_failures?: number;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          last_checked_at?: string | null;
+          last_success_at?: string | null;
+          last_message_at?: string | null;
+          last_error_at?: string | null;
+          last_error?: string | null;
+          consecutive_failures?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       workout_sessions: {
         Row: {
           id: string;
