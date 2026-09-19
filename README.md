@@ -90,15 +90,17 @@ supabase/migrations/ SQL schema migrations
 ### Kharcha Gmail collector
 
 1. Deploy the app with `SUPABASE_SECRET_KEY`, `KHARCHA_USER_ID`, and `KHARCHA_INGEST_SECRET` configured as server-only environment variables.
-2. Create a standalone Google Apps Script project and copy `integrations/kharcha-gmail/Code.gs` and `appsscript.json` into it.
-3. In Apps Script **Project Settings → Script Properties**, set:
+2. In Gmail, create a label named `KharchaBank`.
+3. Create two Gmail filters that apply `KharchaBank` to new messages from `donot_reply@nimb.com.np` and `donotreply@esewa.com.np`. Do not apply the filters to existing messages when starting without a backfill.
+4. Create a standalone Google Apps Script project and copy `integrations/kharcha-gmail/Code.gs` and `appsscript.json` into it. The manifest enables the Advanced Gmail API with read-only access; if `Gmail` does not appear under **Services**, add **Gmail API v1** there.
+5. In Apps Script **Project Settings → Script Properties**, set:
    - `KHARCHA_API_URL` to the deployed `/api/kharcha/ingest/email` HTTPS endpoint.
    - `KHARCHA_INGEST_SECRET` to the same secret configured on the server.
-   - Optionally, `KHARCHA_GMAIL_QUERY` to override the built-in NIMB and eSewa sender query.
-4. Run `Setup` once and approve the Gmail, external request, and trigger permissions. `Setup` starts from the current time, sends a connection heartbeat, and installs the one-minute collector.
-5. Run `TestConnection` after deployment changes. Run `Disable` to remove the collector trigger.
+   - Optionally, `KHARCHA_GMAIL_LABEL` if using a label other than `KharchaBank`; labels are limited to letters, numbers, hyphens, and underscores.
+6. Run `TestConnection` and approve the read-only Gmail, external request, and trigger permissions. It verifies the label and sends a connection heartbeat.
+7. Run `Setup` once. It starts from the current time and installs the one-minute collector. Run `Disable` to remove the trigger.
 
-NIC ASIA is intentionally excluded until a real alert template is available. Raw email bodies and secret values are not stored in Supabase or logged by the integration.
+The collector queries only messages that have the configured label and come from an exact supported sender. Google still presents mailbox-wide read-only consent because Gmail does not provide a label-restricted OAuth scope. NIC ASIA is intentionally excluded until a real alert template is available. Raw email bodies and secret values are not stored in Supabase or logged by the integration.
 
 ### Scripts
 
