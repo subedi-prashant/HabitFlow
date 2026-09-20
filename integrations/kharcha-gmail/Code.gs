@@ -109,7 +109,10 @@ function CollectMessages(messageReferences, lowerBound, upperBound) {
     const subject = GetMessageHeader(headers, "Subject");
     let bodyText = NormalizeBodyText(GetMessageBody(message.payload, "text/plain", gmailMessageId));
     if (!HasExpectedFields(from, bodyText)) {
-      bodyText = NormalizeBodyText(ConvertHtmlToText(GetMessageBody(message.payload, "text/html", gmailMessageId)));
+      const htmlBodyText = NormalizeBodyText(ConvertHtmlToText(GetMessageBody(message.payload, "text/html", gmailMessageId)));
+      if (!bodyText || HasExpectedFields(from, htmlBodyText)) {
+        bodyText = htmlBodyText;
+      }
     }
 
     if (!bodyText) {
@@ -157,16 +160,18 @@ function GetMessageBody(payload, mimeType, gmailMessageId) {
 }
 
 function DecodeMessagePart(part, gmailMessageId) {
-  let encodedBody = part.body && part.body.data ? part.body.data : "";
-  if (!encodedBody && part.body && part.body.attachmentId) {
+  let bodyData = part.body && part.body.data ? part.body.data : "";
+  if (!bodyData && part.body && part.body.attachmentId) {
     const attachment = Gmail.Users.Messages.Attachments.get("me", gmailMessageId, part.body.attachmentId);
-    encodedBody = attachment.data || "";
+    bodyData = attachment.data || "";
   }
-  if (!encodedBody) {
+  if (!bodyData || bodyData.length === 0) {
     return "";
   }
 
-  const bytes = Utilities.base64DecodeWebSafe(encodedBody);
+  const bytes = typeof bodyData === "string"
+    ? Utilities.base64DecodeWebSafe(bodyData.replace(/\s/g, ""))
+    : bodyData;
   return Utilities.newBlob(bytes).getDataAsString("UTF-8");
 }
 
