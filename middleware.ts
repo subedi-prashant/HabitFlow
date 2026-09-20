@@ -1,8 +1,10 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { GetSupabaseConfiguration } from "@/lib/supabase/config";
 
 export async function middleware(request: NextRequest) {
   const signupsEnabled = process.env.NEXT_PUBLIC_SIGNUPS_ENABLED === "true";
+  const configuration = GetSupabaseConfiguration();
 
   let response = NextResponse.next({
     request: {
@@ -11,8 +13,8 @@ export async function middleware(request: NextRequest) {
   });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    configuration.url,
+    configuration.anonKey,
     {
       cookies: {
         get(name: string) {
