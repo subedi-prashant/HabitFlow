@@ -99,8 +99,9 @@ supabase/migrations/ SQL schema migrations
    - Optionally, `KHARCHA_GMAIL_LABEL` if using a label other than `KharchaBank`; labels are limited to letters, numbers, hyphens, and underscores.
 6. Run `TestConnection` and approve the read-only Gmail, external request, and trigger permissions. It verifies the label and sends a connection heartbeat.
 7. Run `Setup` once. It starts from the current time and installs the one-minute collector. Run `Disable` to remove the trigger.
+8. After upgrading an existing collector, run `BackfillLast24Hours` once to safely retry recent messages; transaction and Gmail message IDs prevent duplicate expenses.
 
-The collector queries only messages that have the configured label and come from an exact supported sender. Google still presents mailbox-wide read-only consent because Gmail does not provide a label-restricted OAuth scope. NIC ASIA is intentionally excluded until a real alert template is available. Raw email bodies and secret values are not stored in Supabase or logged by the integration.
+The collector queries recent messages from exact supported senders and accepts them only when the message or another message in its Gmail conversation has the configured label. This handles transaction alerts that Gmail groups into one labeled conversation while avoiding email body access for unrelated senders or unlabeled conversations. Google still presents mailbox-wide read-only consent because Gmail does not provide a label-restricted OAuth scope. NIC ASIA is intentionally excluded until a real alert template is available. Raw email bodies and secret values are not stored in Supabase or logged by the integration.
 
 ### Scripts
 

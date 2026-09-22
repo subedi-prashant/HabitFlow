@@ -44,6 +44,26 @@ function TestConnection() {
   PropertiesService.getScriptProperties().setProperty(PROPERTY_KEYS.LAST_HEARTBEAT_MS, String(Date.now()));
 }
 
+function BackfillLast24Hours() {
+  const properties = PropertiesService.getScriptProperties();
+  const now = Date.now();
+  const startedAt = Number(properties.getProperty(PROPERTY_KEYS.STARTED_AT_MS) || now);
+  const previousLastSync = properties.getProperty(PROPERTY_KEYS.LAST_SYNC_MS);
+  const backfillFrom = Math.max(startedAt, now - 24 * 60 * 60 * 1000);
+  properties.setProperty(PROPERTY_KEYS.LAST_SYNC_MS, String(backfillFrom + OVERLAP_MS));
+
+  try {
+    CollectKharchaEmails();
+  } catch (error) {
+    if (previousLastSync) {
+      properties.setProperty(PROPERTY_KEYS.LAST_SYNC_MS, previousLastSync);
+    } else {
+      properties.deleteProperty(PROPERTY_KEYS.LAST_SYNC_MS);
+    }
+    throw error;
+  }
+}
+
 function CollectKharchaEmails() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(5000)) {
@@ -57,9 +77,10 @@ function CollectKharchaEmails() {
     const startedAt = Number(properties.getProperty(PROPERTY_KEYS.STARTED_AT_MS) || now);
     const lastSync = Number(properties.getProperty(PROPERTY_KEYS.LAST_SYNC_MS) || startedAt);
     const lowerBound = Math.max(startedAt, lastSync - OVERLAP_MS);
-    const query = `label:${configuration.gmailLabel} ${SUPPORTED_SENDERS_QUERY} after:${Math.floor((lowerBound - 1000) / 1000)}`;
+    const gmailLabelId = GetGmailLabelId(configuration.gmailLabel);
+    const query = `${SUPPORTED_SENDERS_QUERY} after:${Math.floor((lowerBound - 1000) / 1000)}`;
     const messageReferences = ListMessageReferences(query);
-    const messages = CollectMessages(messageReferences, lowerBound, now);
+    const messages = CollectMessages(messageReferences, lowerBound, now, gmailLabelId);
 
     for (let index = 0; index < messages.length; index += MAX_BATCH_SIZE) {
       SendPayload(configuration, {
@@ -91,21 +112,34 @@ function ListMessageReferences(query) {
   return response.messages || [];
 }
 
-function CollectMessages(messageReferences, lowerBound, upperBound) {
+function CollectMessages(messageReferences, lowerBound, upperBound, gmailLabelId) {
   const seen = {};
+  const labeledThreads = {};
   const emails = [];
 
   messageReferences.forEach(function (messageReference) {
-    const message = Gmail.Users.Messages.get("me", messageReference.id, { format: "full" });
-    const receivedAt = Number(message.internalDate);
-    const gmailMessageId = message.id;
-    if (!Number.isFinite(receivedAt) || receivedAt < lowerBound || receivedAt > upperBound || seen[gmailMessageId]) {
+    const metadata = Gmail.Users.Messages.get("me", messageReference.id, {
+      format: "metadata",
+      metadataHeaders: ["From", "Subject"],
+    });
+    const receivedAt = Number(metadata.internalDate);
+    const gmailMessageId = metadata.id;
+    const metadataHeaders = metadata.payload && metadata.payload.headers ? metadata.payload.headers : [];
+    const from = GetMessageHeader(metadataHeaders, "From");
+    if (
+      !Number.isFinite(receivedAt)
+      || receivedAt < lowerBound
+      || receivedAt > upperBound
+      || seen[gmailMessageId]
+      || !IsSupportedSender(from)
+      || !IsMessageInLabeledThread(metadata, gmailLabelId, labeledThreads)
+    ) {
       return;
     }
 
     seen[gmailMessageId] = true;
-    const headers = message.payload && message.payload.headers ? message.payload.headers : [];
-    const from = GetMessageHeader(headers, "From");
+    const message = Gmail.Users.Messages.get("me", gmailMessageId, { format: "full" });
+    const headers = message.payload && message.payload.headers ? message.payload.headers : metadataHeaders;
     const subject = GetMessageHeader(headers, "Subject");
     let bodyText = NormalizeBodyText(GetMessageBody(message.payload, "text/plain", gmailMessageId));
     if (!HasExpectedFields(from, bodyText)) {
@@ -128,6 +162,23 @@ function CollectMessages(messageReferences, lowerBound, upperBound) {
   return emails.sort(function (first, second) {
     return first.receivedAt.localeCompare(second.receivedAt);
   });
+}
+
+function IsMessageInLabeledThread(message, gmailLabelId, labeledThreads) {
+  if ((message.labelIds || []).indexOf(gmailLabelId) >= 0) {
+    return true;
+  }
+
+  const threadId = message.threadId;
+  if (Object.prototype.hasOwnProperty.call(labeledThreads, threadId)) {
+    return labeledThreads[threadId];
+  }
+
+  const thread = Gmail.Users.Threads.get("me", threadId, { format: "minimal" });
+  labeledThreads[threadId] = (thread.messages || []).some(function (threadMessage) {
+    return (threadMessage.labelIds || []).indexOf(gmailLabelId) >= 0;
+  });
+  return labeledThreads[threadId];
 }
 
 function GetMessageHeader(headers, name) {
@@ -166,7 +217,14 @@ function DecodeMessagePart(part, gmailMessageId) {
     return "";
   }
 
-  const bytes = Utilities.base64DecodeWebSafe(encodedBody);
+  if (typeof encodedBody !== "string") {
+    return Utilities.newBlob(encodedBody).getDataAsString("UTF-8");
+  }
+
+  const normalizedBody = encodedBody.replace(/\s/g, "");
+  const paddingLength = (4 - normalizedBody.length % 4) % 4;
+  const paddedBody = normalizedBody + "=".repeat(paddingLength);
+  const bytes = Utilities.base64DecodeWebSafe(paddedBody);
   return Utilities.newBlob(bytes).getDataAsString("UTF-8");
 }
 
@@ -216,15 +274,21 @@ function GetConfiguration() {
 }
 
 function ValidateGmailLabel(gmailLabel) {
+  GetGmailLabelId(gmailLabel);
+}
+
+function GetGmailLabelId(gmailLabel) {
   const response = Gmail.Users.Labels.list("me");
   const labels = response.labels || [];
-  const exists = labels.some(function (label) {
-    return label.name === gmailLabel;
+  const label = labels.find(function (candidate) {
+    return candidate.name === gmailLabel;
   });
 
-  if (!exists) {
+  if (!label) {
     throw new Error(`Gmail label ${gmailLabel} does not exist`);
   }
+
+  return label.id;
 }
 
 function RemoveCollectorTriggers() {
@@ -233,6 +297,11 @@ function RemoveCollectorTriggers() {
       ScriptApp.deleteTrigger(trigger);
     }
   });
+}
+
+function IsSupportedSender(from) {
+  const sender = ExtractSender(from);
+  return sender === "donot_reply@nimb.com.np" || sender === "donotreply@esewa.com.np";
 }
 
 function HasExpectedFields(from, bodyText) {
