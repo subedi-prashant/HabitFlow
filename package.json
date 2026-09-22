@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset",
+    "supabase:status": "supabase status"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
@@ -56,6 +60,7 @@
     "eslint": "^8.56.0",
     "eslint-config-next": "14.1.3",
     "postcss": "^8.4.35",
+    "supabase": "2.117.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "7.3.6",

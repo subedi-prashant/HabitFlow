@@ -20,8 +20,8 @@ HabitFlow is a Next.js (App Router) application backed by Supabase. It combines 
 - **Routines** — group habits into morning, evening, fitness, or custom routines you can step through each day.
 - **Training** — log strength workouts (exercises, sets, reps, weight, RPE) and cardio/activity sessions (type, duration, distance, calories, intensity).
 - **Analytics** — 30-day view of completion rates, streaks, and workout volume, visualized with charts.
-- **Kharcha** — automatically import NIMB and eSewa debit alerts from Gmail, add missed or cash expenses manually, and review spending in AD and Bikram Samvat.
-- **Accounts** — Supabase email/password and Google auth, password reset flow, and an env-gated signup toggle.
+- **Kharcha** — automatically import NIMB debit alerts and eSewa merchant-payment emails from Gmail, add missed or cash expenses manually, review unsupported templates, and analyze spending in AD and Bikram Sambat.
+- **Accounts** — Supabase email/password and Google auth, password reset flow, row-level data isolation, and an environment-gated signup toggle.
 - **Polish** — light/dark/system theming, responsive sidebar + mobile bottom navigation, drag-and-drop, and animated UI.
 
 ## Tech Stack
@@ -51,12 +51,18 @@ lib/               Supabase clients, parsers, domain helpers, shared utils
 supabase/migrations/ SQL schema migrations
 ```
 
-## Getting Started
+## Current State
+
+HabitFlow is actively used as a personal, production-deployed application. Habits, routines, training, analytics, authentication, and manual Kharcha entries are functional. The Gmail collector currently supports NIMB debit alerts and the observed eSewa merchant-payment template. NIMB credits are ignored because they are not expenses; unknown eSewa templates such as bank-load confirmations are retained for parser review instead of being imported automatically. NIC ASIA remains intentionally disabled until a real alert template is available.
+
+## Local Development
+
+Local development uses the Supabase CLI stack so application work cannot modify production data. Hosted Supabase credentials should only exist in the deployment environment and must not be copied into `.env.local`.
 
 ### Prerequisites
 
 - Node.js 20+
-- A [Supabase](https://supabase.com/) project
+- Docker Desktop or another Docker-compatible container runtime
 
 ### Setup
 
@@ -66,26 +72,33 @@ supabase/migrations/ SQL schema migrations
    npm install
    ```
 
-2. Create a `.env.local` file in the project root:
+2. Start the local Supabase stack. The first run downloads its container images and applies every migration in `supabase/migrations/`:
 
    ```bash
-   NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-   NEXT_PUBLIC_SIGNUPS_ENABLED=true
-   SUPABASE_SECRET_KEY=your-server-only-supabase-secret-key
-   KHARCHA_USER_ID=your-supabase-user-id
-   KHARCHA_INGEST_SECRET=generate-a-random-secret-at-least-32-characters
+   npm run supabase:start
    ```
 
-3. Run the migrations in `supabase/migrations/` in order through the Supabase CLI, SQL editor, or MCP. `004_kharcha_schema.sql` is self-contained because the legacy Wallet migration was not deployed to every environment.
+3. Display the generated local URL and credentials:
 
-4. Start the dev server:
+   ```bash
+   npm run supabase:status
+   ```
+
+4. Copy `.env.example` to `.env.local`, then replace the placeholder publishable and secret values with the local values printed by the previous command. Keep `NEXT_PUBLIC_SUPABASE_URL` set to `http://127.0.0.1:54321`. Use only a local test user's ID and a local-only ingestion secret for the optional Kharcha ingestion route.
+
+5. Start the application:
 
    ```bash
    npm run dev
    ```
 
-   The app runs at [http://localhost:3000](http://localhost:3000).
+The app runs at [http://localhost:3000](http://localhost:3000), Supabase Studio at [http://127.0.0.1:54323](http://127.0.0.1:54323), and captured local authentication emails at [http://127.0.0.1:54324](http://127.0.0.1:54324).
+
+Use `npm run supabase:stop` when finished. Use `npm run supabase:reset` to rebuild only the local database from migrations; never add `--linked` to that command unless you explicitly intend to reset a remote non-production project.
+
+### Production Configuration
+
+Production uses a separate hosted Supabase project. Configure `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SECRET_KEY`, `KHARCHA_USER_ID`, and `KHARCHA_INGEST_SECRET` only in the deployment platform. Apply reviewed migrations to production separately; local `supabase:start` and `supabase:reset` commands do not target the hosted project.
 
 ### Kharcha Gmail collector
 
@@ -112,6 +125,10 @@ The collector queries recent messages from exact supported senders and accepts t
 | `npm run start` | Run the production build |
 | `npm run lint` | Run ESLint |
 | `npm test` | Run the deterministic parser and ingestion tests |
+| `npm run supabase:start` | Start local Supabase and apply migrations |
+| `npm run supabase:status` | Show local service URLs and credentials |
+| `npm run supabase:stop` | Stop local Supabase while preserving its data |
+| `npm run supabase:reset` | Rebuild the local database from migrations |
 
 ## Database Schema
 
