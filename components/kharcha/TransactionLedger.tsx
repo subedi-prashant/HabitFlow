@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { format, parseISO, subDays } from "date-fns";
-import { Edit3, Eye, EyeOff, MoreHorizontal, Search, Trash2 } from "lucide-react";
+import { Edit3, Eye, EyeOff, MessageSquareText, MoreHorizontal, Search, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,7 @@ import {
   FormatBsDate,
   FormatNpr,
   GetKathmanduDateKey,
+  GetKharchaRemark,
   KHARCHA_CATEGORIES,
   KHARCHA_CHANNEL_LABELS,
   KHARCHA_SOURCE_LABELS,
@@ -99,7 +100,7 @@ export function TransactionLedger({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="h-10 rounded-xl bg-background pl-9"
-              placeholder="Search merchant or reference"
+              placeholder="Search merchant, remark, or reference"
               aria-label="Search expenses"
             />
           </div>
@@ -162,9 +163,7 @@ export function TransactionLedger({
                       <p className="mt-1 truncate text-xs text-muted-foreground">
                         {transaction.category} · {KHARCHA_CHANNEL_LABELS[transaction.channel]} · {format(new Date(transaction.occurred_at), "h:mm a")}
                       </p>
-                      {transaction.description && transaction.description !== transaction.merchant && (
-                        <p className="mt-1 truncate text-xs text-muted-foreground/75">{transaction.description}</p>
-                      )}
+                      <TransactionRemark transaction={transaction} />
                     </div>
                     <div className="flex items-start gap-1 sm:items-center sm:gap-2">
                       <div className="hidden min-w-36 text-right sm:block">
@@ -230,6 +229,21 @@ export function TransactionLedger({
         </div>
       )}
     </article>
+  );
+}
+
+function TransactionRemark({ transaction }: { transaction: KharchaTransaction }) {
+  const remark = GetKharchaRemark(transaction.source, transaction.merchant, transaction.description);
+  if (!remark) {
+    return null;
+  }
+
+  return (
+    <div className="mt-2 flex min-w-0 items-center gap-1.5 text-xs text-foreground/80">
+      <MessageSquareText className="h-3.5 w-3.5 shrink-0 text-primary" />
+      <span className="shrink-0 font-semibold text-muted-foreground">Remark</span>
+      <span className="truncate font-medium">{remark}</span>
+    </div>
   );
 }
 

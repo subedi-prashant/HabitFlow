@@ -142,6 +142,27 @@ export function FormatNpr(amount: number): string {
   }).format(amount)}`;
 }
 
+export function GetKharchaRemark(source: KharchaSource, merchant: string, description: string): string | null {
+  const normalizedDescription = CleanKharchaRemark(description);
+  if (!normalizedDescription) {
+    return null;
+  }
+
+  if (source === "NIMB") {
+    const remark = description
+      .split(",")
+      .slice(1)
+      .map(CleanKharchaRemark)
+      .find((detailPart) => detailPart && /[A-Za-z]/.test(detailPart));
+    if (remark) {
+      return remark;
+    }
+  }
+
+  const normalizedMerchant = CleanKharchaRemark(merchant);
+  return normalizedDescription.toLowerCase() === normalizedMerchant?.toLowerCase() ? null : normalizedDescription;
+}
+
 export function GetBsDate(date: Date): BSEntryDate {
   const kathmanduParts = GetKathmanduParts(date);
   const neutralDate = new Date(
@@ -458,6 +479,22 @@ function InferNimbChannel(merchant: string, description: string): KharchaChannel
 
 function BoundText(value: string, maximumLength: number): string {
   return value.replace(/\s+/g, " ").trim().slice(0, maximumLength);
+}
+
+function CleanKharchaRemark(value: string): string | null {
+  const cleaned = value
+    .replace(/<br\s*\/?\s*>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#160;|\u00a0/gi, " ")
+    .replace(/\s+/g, " ")
+    .replace(/[.\s]+$/g, "")
+    .trim();
+
+  if (!cleaned) {
+    return null;
+  }
+
+  return `${cleaned.charAt(0).toUpperCase()}${cleaned.slice(1)}`.slice(0, 160);
 }
 
 function GetKathmanduParts(date: Date) {
