@@ -387,17 +387,17 @@ function GetSyncStatus(syncState: KharchaSyncState | null) {
   }
 
   const minutesSinceCheck = (Date.now() - new Date(syncState.last_checked_at).getTime()) / 60000;
-  if (minutesSinceCheck > 20) {
+  if (minutesSinceCheck > 40) {
     return {
       label: "Sync overdue",
-      detail: "No collector heartbeat has arrived in the last 20 minutes.",
+      detail: "No collector heartbeat has arrived in the last 40 minutes.",
       tone: "bg-amber-500",
     };
   }
 
   return {
     label: "Sync healthy",
-    detail: "The Gmail collector is checking NIMB and eSewa every minute.",
+    detail: "The Gmail collector is checking NIMB and eSewa every 15 minutes.",
     tone: "bg-emerald-500",
   };
 }
