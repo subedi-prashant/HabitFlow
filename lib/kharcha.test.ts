@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ParseKharchaEmail } from "./kharcha";
+import { GetKharchaRemark, ParseKharchaEmail } from "./kharcha";
 
 const baseEmail = {
   gmailMessageId: "gmail_synthetic_001",
@@ -150,5 +150,24 @@ Transaction Amount (NPR)
     });
 
     expect(result.status).toBe("unsupported");
+  });
+});
+
+describe("GetKharchaRemark", () => {
+  it.each([
+    ["TXN_SYNTHETIC_A,mark,12345678,1000000000000001,10001.<br>", "Mark"],
+    ["TXN_SYNTHETIC_B,popcorn,23456789,1000000000000002.<br>", "Popcorn"],
+    ["TXN_SYNTHETIC_C,pizza,34567890,1000000000000003.<br>", "Pizza"],
+    ["ESEWA,45678901,1000000000000004,helmet lock.<br>", "Helmet lock"],
+  ])("extracts a clean NIMB remark from bank detail", (description, expected) => {
+    expect(GetKharchaRemark("NIMB", description.split(",")[0], description)).toBe(expected);
+  });
+
+  it("uses a manual description as its remark", () => {
+    expect(GetKharchaRemark("MANUAL", "Coffee shop", "Meeting with team")).toBe("Meeting with team");
+  });
+
+  it("hides descriptions that only repeat the merchant", () => {
+    expect(GetKharchaRemark("ESEWA", "Fonepay Payment", "Fonepay Payment")).toBeNull();
   });
 });
