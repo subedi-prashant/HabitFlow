@@ -22,7 +22,7 @@ function Setup() {
   const now = Date.now();
 
   RemoveCollectorTriggers();
-  ScriptApp.newTrigger(COLLECTOR_HANDLER).timeBased().everyMinutes(1).create();
+  ScriptApp.newTrigger(COLLECTOR_HANDLER).timeBased().everyMinutes(15).create();
   properties.setProperties({
     [PROPERTY_KEYS.STARTED_AT_MS]: String(now),
     [PROPERTY_KEYS.LAST_SYNC_MS]: String(now),
@@ -45,11 +45,19 @@ function TestConnection() {
 }
 
 function BackfillLast24Hours() {
+  BackfillDays(1);
+}
+
+function BackfillLast7Days() {
+  BackfillDays(7);
+}
+
+function BackfillDays(days) {
   const properties = PropertiesService.getScriptProperties();
   const now = Date.now();
   const startedAt = Number(properties.getProperty(PROPERTY_KEYS.STARTED_AT_MS) || now);
   const previousLastSync = properties.getProperty(PROPERTY_KEYS.LAST_SYNC_MS);
-  const backfillFrom = Math.max(startedAt, now - 24 * 60 * 60 * 1000);
+  const backfillFrom = Math.max(startedAt, now - days * 24 * 60 * 60 * 1000);
   properties.setProperty(PROPERTY_KEYS.LAST_SYNC_MS, String(backfillFrom + OVERLAP_MS));
 
   try {
